@@ -25,6 +25,7 @@ flatpak install -y flathub org.kde.kdenlive
 flatpak install -y flathub com.github.tchx84.Flatseal
 flatpak install -y flathub com.belmoussaoui.Obfuscate
 flatpak install -y flathub com.visualstudio.code
+flatpak install -y flathub com.bitwarden.desktop
 
 # install multimedia codecs
 sudo apt-get install -y ubuntu-restricted-extras
