@@ -3,16 +3,25 @@
 # update & upgrade the system
 sudo apt-get update && sudo apt-get upgrade -y
 
-# install nvidia driver
-echo "Do you have an Nvidia Graphics Card? (y/n)"
-read answer
+# Install ubuntu-drivers-common to get the recommended NVIDIA driver
+sudo apt update
+sudo apt install -y ubuntu-drivers-common
 
-if [[ $answer == "y" || $answer == "Y" || $answer == "yes" || $answer = "Yes" ]]; then
-    sudo apt-get install nvidia-akmod
-    echo "Nvidia driver installed successfully"
-else
-    echo "Aight, moving on.."
+# Check which NVIDIA driver is recommended for the system
+recommended_driver=$(ubuntu-drivers devices | awk '/nvidia-driver/ {print $3}')
+
+# Check which NVIDIA GPU is being used
+gpu=$(lspci | grep -E "VGA|3D" | grep -i NVIDIA)
+
+if [ -z "$gpu" ]; then
+  echo "No NVIDIA GPU detected on this system."
 fi
+
+# Install the recommended NVIDIA driver
+sudo ubuntu-drivers install -y "$recommended_driver"
+
+echo "NVIDIA driver ($recommended_driver) has been successfully installed for the following GPU:"
+echo "$gpu"
 
 # install basic tools
 sudo apt-get install -y git vim tmux curl python3-pip htop asciinema flatpak
