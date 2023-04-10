@@ -23,7 +23,7 @@ sudo dnf install lame\* --exclude=lame-devel
 sudo dnf group upgrade --with-optional Multimedia
 
 # install basic tools
-sudo dnf install -y git vim tmux curl python3-pip htop asciinema flatpak
+sudo dnf install -y git vim tmux curl python3-pip tree htop asciinema flatpak
 
 # add flathub repo
 flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
