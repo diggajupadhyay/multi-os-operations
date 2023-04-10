@@ -1,110 +1,99 @@
 #!/bin/bash
 
-# dnf hacks
-sudo bash -c 'cat << EOF >> /etc/dnf/dnf.conf
-fastestmirror=True
-max_parallel_downloads=10
-defaultyes=True
-EOF'
+# set variables
+dnf_config=/etc/dnf/dnf.conf
+rpmfusion_free_url=https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
+rpmfusion_nonfree_url=https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+basic_tools=(git vim tmux curl python3-pip tree htop tlp tlp-rdw powertop asciinema flatpak gnome-tweaks gnome-extensions-app)
+common_software=(thunderbird gimp nextcloud-client vlc steam portmaster)
+development_tools=(docker docker-compose podman podman-compose)
+flatpak_remote=https://flathub.org/repo/flathub.flatpakrepo
+flatpak_apps=(org.kde.kdenlive com.github.tchx84.Flatseal com.belmoussaoui.Obfuscate com.visualstudio.code com.bitwarden.desktop)
 
-# Enable RPM Fusion repositories
-sudo dnf install \
-  https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
-sudo dnf install \
-  https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
-sudo dnf group update core
+add_dnf_hacks() {
+  echo -e "fastestmirror=True\nmax_parallel_downloads=10\ndefaultyes=True" | sudo tee -a "$dnf_config" > /dev/null
+}
 
-# upgrade the system
-sudo dnf --refresh upgrade -y
+install_rpmfusion_repos() {
+  sudo dnf install -y "$rpmfusion_free_url" "$rpmfusion_nonfree_url"
+  sudo dnf group update core
+}
 
-# Install plugins for playing movies and music
-sudo dnf install gstreamer1-plugins-{bad-\*,good-\*,base} gstreamer1-plugin-openh264 gstreamer1-libav --exclude=gstreamer1-plugins-bad-free-devel
-sudo dnf install lame\* --exclude=lame-devel
-sudo dnf group upgrade --with-optional Multimedia
+upgrade_system() {
+  sudo dnf --refresh upgrade -y
+}
 
-# install basic tools
-sudo dnf install -y git vim tmux curl python3-pip tree htop asciinema flatpak
+install_multimedia_plugins() {
+  sudo dnf install -y gstreamer1-plugins-{bad-\*,good-\*,base} gstreamer1-plugin-openh264 gstreamer1-libav --exclude=gstreamer1-plugins-bad-free-devel
+  sudo dnf install -y lame\* --exclude=lame-devel
+  sudo dnf group upgrade --with-optional Multimedia
+}
 
-# add flathub repo
-flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+install_basic_tools() {
+  for app in "${basic_tools[@]}"
+  do
+    read -r -p "Do you want to install $app? [y/n] " choice
+    if [[ "$choice" =~ [yY] ]]; then
+      sudo dnf install -y "$app"
+    else
+      echo "Skipping $app installation."
+    fi
+  done
+}
 
-# define the list of flatpak apps to install
-flatpak_apps=("org.kde.kdenlive" "com.github.tchx84.Flatseal" "com.belmoussaoui.Obfuscate" "com.visualstudio.code" "com.bitwarden.desktop")
+add_flathub_repo() {
+  flatpak remote-add --if-not-exists flathub "$flatpak_remote"
+}
 
-# loop through the list of apps
-for app in "${flatpak_apps[@]}"
-do
-    # ask the user for confirmation
-    read -p "Do you want to install $app? [y/n] " choice
-    case "$choice" in 
-        y|Y )
-            # install the app if the user confirms
-            flatpak install -y flathub "$app"
-            ;;
-        n|N )
-            # do nothing and move on to the next app if the user declines
-            echo "Skipping $app installation."
-            ;;
-        * )
-            # handle invalid input and re-prompt for confirmation
-            echo "Invalid input. Please enter y/n."
-            ((i--))
-            ;;
-    esac
-done
+install_flatpak_apps() {
+  for app in "${flatpak_apps[@]}"
+  do
+    read -r -p "Do you want to install $app? [y/n] " choice
+    if [[ "$choice" =~ [yY] ]]; then
+      flatpak install -y "$flatpak_remote" "$app"
+    else
+      echo "Skipping $app installation."
+    fi
+  done
+}
 
-# install common software
-read -p "Do you want to install Thunderbird? (y/n) " -r
-if [[ $REPLY =~ ^[Yy]$ ]]
-then
-    sudo dnf install -y thunderbird
-fi
+install_common_software() {
+  for app in "${common_software[@]}"
+  do
+    read -r -p "Do you want to install $app? [y/n] " choice
+    if [[ "$choice" =~ [yY] ]]; then
+      sudo dnf install -y "$app"
+    else
+      echo "Skipping $app installation."
+    fi
+  done
+}
 
-read -p "Do you want to install Nextcloud Desktop? (y/n) " -r
-if [[ $REPLY =~ ^[Yy]$ ]]
-then
-    sudo dnf install -y nextcloud-client
-fi
-
-read -p "Do you want to install GIMP? (y/n) " -r
-if [[ $REPLY =~ ^[Yy]$ ]]
-then
-    sudo dnf install -y gimp
-fi
-
-read -p "Do you want to install VLC? (y/n) " -r
-if [[ $REPLY =~ ^[Yy]$ ]]
-then
-    sudo dnf install -y vlc
-fi
-
-read -p "Do you want to install Steam? (y/n) " -r
-if [[ $REPLY =~ ^[Yy]$ ]]
-then
-    sudo dnf install -y steam
-fi
-
-# install development tools
-#sudo dnf install -y podman podman-compose docker docker-compose
-
-# install portmaster
-wget -c --directory-prefix=/tmp/ https://updates.safing.io/latest/linux_amd64/packages/portmaster-installer.rpm
-sudo dnf install -y /tmp/portmaster-installer.rpm
+install_development_tools() {
+  for app in "${development_tools[@]}"
+  do
+    read -r -p "Do you want to install $app? [y/n] " choice
+    if [[ "$choice" =~ [yY] ]]; then
+      sudo dnf install -y "$app"
+    else
+      echo "Skipping $app installation."
+    fi
+  done
+}
 
 # configure git
-read -p "Enter your full name: " full_name
-read -p "Enter your email: " email
+read -r -p "Enter your full name: " full_name
+read -r -p "Enter your email: " email
 git config --global user.name "$full_name"
 git config --global user.email "$email"
 
-# reboot
-echo "It is recommended to reboot your system. Do it now? (y/n)"
-read answer
+read -p "It is recommended to reboot your system. Do it now? (y/n)" answer
 
-if [ "$answer" = "y" ] || [ "$answer" = "Y" ] || [ "$answer" = "yes" ] || [ "$answer" = "Yes" ]; then
-    echo "Rebooting in 5 seconds..."
-    sleep 5
-    sudo reboot
+if [[ $answer =~ ^[Yy][EeSs]?$ ]]; then
+  echo "Rebooting in 5 seconds..."
+  sleep 5
+  sudo reboot
 else
-    echo "duhh! Don't break your system. Bye!"
+  echo "Okay, but don't forget to reboot later if needed. Bye!"
 fi
+
