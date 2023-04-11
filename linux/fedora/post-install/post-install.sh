@@ -43,6 +43,30 @@ fi
 sudo dnf group upgrade --with-optional Multimedia
 
 
+# Declare a variable with the list of basic tools to install
+basic_tools=("git" "vim" "tmux" "curl" "python3-pip" "rust" "cargo" "htop" "asciinema" "flatpak")
+
+# Loop through the list of tools
+for tool in "${basic_tools[@]}"
+do
+    # Check if the tool is already installed
+    if ! command -v "$tool" &> /dev/null
+    then
+        # Prompt the user to install the tool
+        while true; do
+            read -p "$tool is not installed. Do you want to install it? (y/n): " yn
+            case $yn in
+                [Yy]* ) sudo dnf install -y "$tool"; break;;
+                [Nn]* ) break;;
+                * ) echo "Please answer y or n.";;
+            esac
+        done
+    else
+        echo "$tool is already installed."
+    fi
+done
+
+
 # upgrade the system
 sudo dnf --refresh upgrade -y
 
