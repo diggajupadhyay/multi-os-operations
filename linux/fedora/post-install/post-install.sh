@@ -143,11 +143,38 @@ do
 done
 
 
+# Check if firewalld is installed
+if ! command -v firewall-cmd &> /dev/null
+then
+    # Install firewalld if it is not installed
+    sudo dnf install -y firewalld
+fi
+
+# Enable and start the firewall
+sudo systemctl enable firewalld
+sudo systemctl start firewalld
+
+# Block default services and ports except for SSH
+sudo firewall-cmd --zone=public --add-service=ssh --permanent
+sudo firewall-cmd --zone=public --remove-service=dhcpv6-client --permanent
+sudo firewall-cmd --zone=public --remove-service=mdns --permanent
+sudo firewall-cmd --zone=public --remove-service=samba-client --permanent
+sudo firewall-cmd --zone=public --remove-service=samba --permanent
+sudo firewall-cmd --zone=public --remove-service=dhcpv6 --permanent
+sudo firewall-cmd --reload
+
+
 # configure git
-read -r -p "Enter your full name: " full_name
-read -r -p "Enter your email: " email
-git config --global user.name "$full_name"
-git config --global user.email "$email"
+read -p "Do you want to configure git? (y/n) " -r
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+    read -r -p "Enter your full name: " full_name
+    read -r -p "Enter your email: " email
+    git config --global user.name "$full_name"
+    git config --global user.email "$email"
+else
+    echo "Skipping git configuration."
+fi
 
 
 # prompt the user to reboot
@@ -165,4 +192,3 @@ case "$choice" in
         echo "Invalid input. Please enter y/n."
         ;;
 esac
-
