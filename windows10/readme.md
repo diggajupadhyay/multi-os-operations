@@ -32,4 +32,4 @@ Use this script at your own risk. Review the script content to ensure it aligns 
 
 ## Author
 
-Diggaj Upadhyay
+[Diggaj Upadhyay](https://github.com/diggajupadhyay/)
