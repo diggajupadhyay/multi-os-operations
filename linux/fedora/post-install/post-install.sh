@@ -2,13 +2,13 @@
 
 
 # Notify user about checking for required lines in /etc/dnf/dnf.conf
-echo "This script will check if the following lines exist in /etc/dnf/dnf.conf:"
+echo "This script will add the following lines in /etc/dnf/dnf.conf:"
 echo "fastestmirror=True"
 echo "max_parallel_downloads=10"
 echo "defaultyes=True"
 
 # Ask user if they want to proceed with checking for the lines
-read -p "Do you want to proceed with checking? [Y/n] " response
+read -p "Do you want to proceed? [Y/n] " response
 
 # Convert response to uppercase for consistency
 response=${response^^}
@@ -24,9 +24,9 @@ else
   else
     # Append the three lines to the file if not already
     sudo tee -a /etc/dnf/dnf.conf >/dev/null <<EOF
-    fastestmirror=True
-    max_parallel_downloads=10
-    defaultyes=True
+fastestmirror=True
+max_parallel_downloads=10
+defaultyes=True
 EOF
     echo "The lines have been appended to the file."
   fi

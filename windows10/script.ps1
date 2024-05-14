@@ -1,26 +1,33 @@
 ## Start of the Program
 
-# Function to uninstall windows apps
 function Uninstall-App {
     param (
         [string]$AppName
     )
 
+    # Ensure lowercase for consistency
+    $AppName = $AppName.ToLower()
+
+    # Validate user input
     $choice = Read-Host "Do you want to uninstall $AppName? (y/n)"
+    $validChoices = @("y", "n")
+
+    while ($choice -notin $validChoices) {
+        Write-Host "Invalid choice. Please enter 'y' or 'n'."
+        $choice = Read-Host "Do you want to uninstall $AppName? (y/n)"
+    }
 
     if ($choice -eq 'y') {
         Get-AppxPackage $AppName -AllUsers | Remove-AppxPackage
+        Write-Host "$AppName uninstalled successfully." -ForegroundColor Green
     } else {
         Write-Host "$AppName will not be uninstalled." -ForegroundColor Yellow
     }
 }
 
-# Start of windows app uninstallation
-Write-Host "Welcome to App Uninstallation Script!" -ForegroundColor Green
-
-# List of apps to uninstall
-$apps = @(
-    "*MicrosoftTeams*",
+# List of apps to potentially uninstall (lowercase for consistency)
+$appNames = @(
+    "*microsoftteams*",
     "Microsoft.XboxGamingOverlay",
     "Microsoft.windowscommunicationsapps",
     "*bing*",
@@ -55,51 +62,17 @@ $apps = @(
     "Microsoft.549981C3F5F10"
 )
 
+# Start of app uninstallation
+Write-Host "Welcome to App Uninstallation Script!" -ForegroundColor Green
+
 # Uninstall each app based on user choice
-foreach ($app in $apps) {
-    Uninstall-App -AppName $app
+foreach ($appName in $appNames) {
+    Uninstall-App -AppName $appName
 }
 
-Write-Host "Apps Uninstalled Successfully!"
 
-# Function to perform system configuration actions
-function Configure-System {
-    param (
-        [string]$Action,
-        [string]$RegistryPath,
-        [string]$RegistryName,
-        [int]$RegistryValue,
-        [string]$ServiceName,
-        [string]$ServiceStartupType,
-        [string]$Command
-    )
 
-    $choice = Read-Host "Do you want to $Action? (y/n)"
-
-    if ($choice -eq 'y') {
-        # Action for registry modifications
-        if ($RegistryPath -ne $null -and $RegistryName -ne $null) {
-            New-ItemProperty -Path $RegistryPath -Name $RegistryName -Value $RegistryValue -PropertyType DWORD -Force
-        }
-
-        # Action for service modifications
-        if ($ServiceName -ne $null -and $ServiceStartupType -ne $null) {
-            Stop-Service -Name $ServiceName -Force
-            Set-Service -Name $ServiceName -StartupType $ServiceStartupType
-        }
-
-        # Action for command execution
-        if ($Command -ne $null) {
-            Invoke-Expression -Command $Command
-        }
-
-        Write-Host "$Action completed successfully!" -ForegroundColor Green
-    } else {
-        Write-Host "$Action skipped." -ForegroundColor Yellow
-    }
-}
-
-# Start of Script
+# Start of System Configuration
 Write-Host "Welcome to the System Configuration Script!" -ForegroundColor Green
 
 # Perform each system configuration action
